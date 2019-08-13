@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+
+### Create a database backup.
+###
+### Usage:
+###     $ docker-compose -f <environment>.yml (exec |run --rm) postgres backup
+
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+working_dir="$(dirname ${0})"
+source "${working_dir}/_sourced/constants.sh"
+source "${working_dir}/_sourced/messages.sh"
+
+
+message_welcome "Dropping up the '${POSTGRES_DB}' database..."
+
+
+if [[ "${POSTGRES_USER}" == "postgres" ]]; then
+    message_error "Dropping as 'postgres' user is not supported. Assign 'POSTGRES_USER' env with another one and try again."
+    exit 1
+fi
+
+export PGHOST="${POSTGRES_HOST}"
+export PGPORT="${POSTGRES_PORT}"
+export PGUSER="${POSTGRES_USER}"
+export PGPASSWORD="${POSTGRES_PASSWORD}"
+export PGDATABASE="${POSTGRES_DB}"
+
+dropdb ${PGDATABASE}
+createdb --owner="${POSTGRES_USER}"
+
+message_success "'${POSTGRES_DB}' database have been dropped."
