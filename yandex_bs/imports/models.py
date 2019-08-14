@@ -15,7 +15,7 @@ class Citizen(models.Model):
     street = models.TextField(validators=[ValidStringValidator()])
     building = models.TextField(validators=[ValidStringValidator()])
     apartment = models.IntegerField(validators=[MinValueValidator(0)])
-    name = models.TextField(validators=[MinLengthValidator(1)])
+    name = models.TextField(validators=[MinLengthValidator(0)])
     birth_date = models.DateField()
     import_object = models.ForeignKey(to=ImportObject, related_name='citizens', on_delete=models.CASCADE)
 

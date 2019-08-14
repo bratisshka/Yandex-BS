@@ -27,6 +27,8 @@ class ImportSerializer(serializers.Serializer):
     citizens = CitizenSerializer(many=True)
 
     def validate_citizens(self, value):
+        if len(set([citizen['citizen_id'] for citizen in value])) != len(value):
+            raise ValidationError("citizens are not unique in import")
         data = {
             citizen['citizen_id']: set(citizen['relatives']) for citizen in value
         }

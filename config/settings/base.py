@@ -130,6 +130,12 @@ LOGGING = {
             "formatter": "verbose",
         }
     },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    },
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 REST_FRAMEWORK = {
@@ -139,4 +145,5 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
     'DATE_INPUT_FORMATS': ['%d.%m.%Y'],
+    'DATE_FORMAT': '%d.%m.%Y',
 }

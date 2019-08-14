@@ -13,3 +13,6 @@ class CitizenFactory(factory.DjangoModelFactory):
         model = Citizen
 
     import_object = factory.SubFactory(ImportFactory)
+    citizen_id = factory.Sequence(lambda n: n)
+    name = factory.Faker("name")
+    town = factory.Faker('')
