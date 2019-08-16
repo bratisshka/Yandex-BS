@@ -6,13 +6,13 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from yandex_bs.imports.models import ImportObject
-from yandex_bs.imports.seralizers import ImportSerializer, CitizenSerializer
+from yandex_bs.imports.models import ImportObject, Citizen
+from yandex_bs.imports.seralizers import ImportSerializer, CitizenSerializer, PatchCitizenSerializer
 from yandex_bs.imports.utils import calculate_age
 
 
 @api_view(['POST'])
-def create_import(equest):
+def create_import(request):
     import_serializer = ImportSerializer(data=request.data)
     import_serializer.is_valid(raise_exception=True)
     import_instance = import_serializer.save()
@@ -30,6 +30,16 @@ def retrieve_import(request, import_id):
     citizens = import_object.citizens.order_by('citizen_id')
     citizen_data = CitizenSerializer(citizens, many=True).data
     return Response({"data": citizen_data})
+
+
+@api_view(['PATCH'])
+def patch_citizen(request, import_id, citizen_id):
+    import_object = get_object_or_404(ImportObject, pk=import_id)
+    citizen_object = get_object_or_404(Citizen, import_object=import_object, citizen_id=citizen_id)
+    citizen_serializer = PatchCitizenSerializer(citizen_object, data=request.data, partial=True)
+    citizen_serializer.is_valid(raise_exception=True)
+    citizen_serializer.save()
+    return Response({"data": CitizenSerializer(citizen_object).data})
 
 
 @api_view()
