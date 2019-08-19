@@ -13,12 +13,12 @@ services:
     image: yandex_bs_production_django
     depends_on:
       - postgres
-      - redis
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
-
+    ports:
+      - "0.0.0.0:8080:8080"
   postgres:
     build:
       context: .
@@ -29,16 +29,3 @@ services:
       - production_postgres_data_backups:/backups
     env_file:
       - ./.envs/.production/.postgres
-
-  traefik:
-    build:
-      context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
-    image: yandex_bs_production_traefik
-    depends_on:
-      - django
-    volumes:
-      - production_traefik:/etc/traefik/acme
-    ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"

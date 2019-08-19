@@ -115,7 +115,7 @@ class ImportSerializer(serializers.Serializer):
                         api_settings.NON_FIELD_ERRORS_KEY: "relatives is not valid"
                     })
         citizen_serializer = CitizenSerializer()
-        return [citizen_serializer.run_validation(citizen) for citizen in value]
+        return value
 
     def create(self, validated_data):
         import_obj = ImportObject.objects.create()

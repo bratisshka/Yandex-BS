@@ -171,6 +171,8 @@ typings/
 .idea/**/tasks.xml
 .idea/dictionaries
 
+.idea/**
+
 # Sensitive or high-churn files:
 .idea/**/dataSources/
 .idea/**/dataSources.ids
@@ -189,6 +191,7 @@ cmake-build-debug/
 
 # Mongo Explorer plugin:
 .idea/**/mongoSettings.xml
+
 
 ## File-based project format:
 *.iws

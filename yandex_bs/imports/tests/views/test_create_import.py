@@ -214,22 +214,3 @@ def test_retrieve_citizens(client):
     retrieve_response = client.get(reverse('retrieve_import', args=[import_id]))
     assert retrieve_response.status_code == status.HTTP_200_OK
     assert retrieve_response.data['data'] == data['citizens']
-
-
-def test_create_many_citizens(client):
-    citizens_data = [{
-        "citizen_id": index,
-        "town": "Москва",
-        "street": "Льва Толстого",
-        "building": "16к7стр5",
-        "apartment": 7,
-        "name": "Иванов Сергей Иванович",
-        "birth_date": "01.04.1997",
-        "gender": "male",
-        "relatives": []
-    } for index in range(1, 10001)]
-    request_data = json.dumps({"citizens": citizens_data}, ensure_ascii=False)
-    start_time = time.clock()
-    response = client.post(reverse('create_import'), request_data, content_type='application/json')
-    assert response.status_code == status.HTTP_201_CREATED
-    assert (time.clock() - start_time) <= 10
