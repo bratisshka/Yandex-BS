@@ -1,5 +1,6 @@
 import copy
 import json
+import time
 
 from django.urls import reverse
 from rest_framework import status
@@ -196,3 +197,39 @@ def test_citizens_relatives_not_valid(client):
     data['citizens'][0]['relatives'] = []
     response = client.post(reverse('create_import'), json.dumps(data), content_type='application/json')
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_disallow_excess_field(client):
+    data = copy.deepcopy(valid_data)
+    data['citizens'][0]["excess_field"] = "value"
+    response = client.post(reverse('create_import'), json.dumps(data), content_type='application/json')
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_retrieve_citizens(client):
+    data = copy.deepcopy(valid_data)
+    create_response = client.post(reverse('create_import'), json.dumps(data), content_type='application/json')
+    assert create_response.status_code == status.HTTP_201_CREATED
+    import_id = create_response.data['data']['import_id']
+    retrieve_response = client.get(reverse('retrieve_import', args=[import_id]))
+    assert retrieve_response.status_code == status.HTTP_200_OK
+    assert retrieve_response.data['data'] == data['citizens']
+
+
+def test_create_many_citizens(client):
+    citizens_data = [{
+        "citizen_id": index,
+        "town": "Москва",
+        "street": "Льва Толстого",
+        "building": "16к7стр5",
+        "apartment": 7,
+        "name": "Иванов Сергей Иванович",
+        "birth_date": "01.04.1997",
+        "gender": "male",
+        "relatives": []
+    } for index in range(1, 10001)]
+    request_data = json.dumps({"citizens": citizens_data}, ensure_ascii=False)
+    start_time = time.clock()
+    response = client.post(reverse('create_import'), request_data, content_type='application/json')
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (time.clock() - start_time) <= 10

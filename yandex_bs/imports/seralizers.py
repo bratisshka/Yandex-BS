@@ -1,13 +1,16 @@
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import empty
+from rest_framework.settings import api_settings
 
 from yandex_bs.imports.models import Citizen, ImportObject
 from yandex_bs.imports.serializer_fields import GOSTDateField
+from yandex_bs.imports.validators import EarlyOrEqualTodayValidator
 
 
 class CitizenSerializer(serializers.ModelSerializer):
-    birth_date = GOSTDateField()
+    birth_date = GOSTDateField(validators=[EarlyOrEqualTodayValidator()])
 
     class Meta:
         model = Citizen
@@ -23,10 +26,19 @@ class CitizenSerializer(serializers.ModelSerializer):
             'relatives'
         )
 
+    def run_validation(self, data=empty):
+        if data is not empty:
+            unknown = set(data) - set(self.fields)
+            if unknown:
+                errors = ["Unknown field: {}".format(f) for f in unknown]
+                raise serializers.ValidationError({
+                    api_settings.NON_FIELD_ERRORS_KEY: errors,
+                })
+
+        return super(CitizenSerializer, self).run_validation(data)
+
 
 class PatchCitizenSerializer(CitizenSerializer):
-    birth_date = GOSTDateField()
-
     class Meta:
         model = Citizen
         fields = (
@@ -87,22 +99,32 @@ class ImportSerializer(serializers.Serializer):
 
     def validate_citizens(self, value):
         if len(set([citizen['citizen_id'] for citizen in value])) != len(value):
-            raise ValidationError("citizens are not unique in import")
+            raise ValidationError({
+                api_settings.NON_FIELD_ERRORS_KEY: "citizens are not unique in import"
+            })
+
         data = {
             citizen['citizen_id']: set(citizen['relatives']) for citizen in value
         }
+
         for citizen in data.keys():
             for relative_id in data[citizen]:
-                relative_set = data.get(relative_id)
-                if relative_set is None:
-                    raise ValidationError("relatives is not valid (empty relative set)")
+                relative_set = data.get(relative_id, set())
                 if citizen not in relative_set:
-                    raise ValidationError("relatives is not valid")
-        return [CitizenSerializer().run_validation(citizen) for citizen in value]
+                    raise ValidationError({
+                        api_settings.NON_FIELD_ERRORS_KEY: "relatives is not valid"
+                    })
+        citizen_serializer = CitizenSerializer()
+        return [citizen_serializer.run_validation(citizen) for citizen in value]
 
     def create(self, validated_data):
         import_obj = ImportObject.objects.create()
+        citizens = []
         for citizen in validated_data['citizens']:
             citizen['import_object'] = import_obj
-            Citizen.objects.create(**citizen)
+            citizens.append(Citizen(**citizen))
+        Citizen.objects.bulk_create(citizens)
         return import_obj
+
+    def update(self, instance, validated_data):
+        return instance

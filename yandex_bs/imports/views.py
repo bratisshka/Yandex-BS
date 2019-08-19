@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
 from yandex_bs.imports.models import ImportObject, Citizen
 from yandex_bs.imports.seralizers import ImportSerializer, CitizenSerializer, PatchCitizenSerializer
@@ -27,8 +28,22 @@ def create_import(request):
 @api_view()
 def retrieve_import(request, import_id):
     import_object = get_object_or_404(ImportObject, pk=import_id)
-    citizens = import_object.citizens.order_by('citizen_id')
-    citizen_data = CitizenSerializer(citizens, many=True).data
+    citizens = import_object.citizens.order_by('citizen_id').values_list('citizen_id', 'town', 'street', 'building',
+                                                                         'apartment', 'name', 'birth_date', 'gender',
+                                                                         'relatives')
+    citizen_data = [
+        {
+            "citizen_id": citizen[0],
+            "town": citizen[1],
+            "street": citizen[2],
+            "building": citizen[3],
+            "apartment": citizen[4],
+            "name": citizen[5],
+            "birth_date": citizen[6].strftime(api_settings.DATE_FORMAT),
+            "gender": citizen[7],
+            "relatives": citizen[8],
+        } for citizen in citizens
+    ]
     return Response({"data": citizen_data})
 
 
