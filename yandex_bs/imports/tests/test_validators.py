@@ -26,6 +26,7 @@ def test_early_or_equal_today_validator(now):
 
     with pytest.raises(ValidationError):
         validator(date(2019, 1, 2))
+        validator(date(2018, 2, 31))
 
     valid_cases = [
         date(2018, 12, 31),
