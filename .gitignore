@@ -333,3 +333,4 @@ yandex_bs/media/
 .env
 .envs/*
 !.envs/.local/
+!.envs/.production_example/
